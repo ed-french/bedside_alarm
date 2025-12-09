@@ -28,7 +28,13 @@
 
 
 
+#define BACKLIGHT_MINIMUM_BRIGHTNESS 20
+#define BACKLIGHT_MAXIMUM_BRIGHTNESS 255
 
+#define BACKLIGHT_DARK_UNTIL_SECONDS (6*60*60) // 6am
+#define BACKLIGHT_MAX_BRIGHTNESS_SECONDS (9*60*60) // 9am
+#define BACKLIGHT_START_DIMMING_SECONDS (20*60*60) // 8pm 
+#define BACKLIGHT_FULLY_DIMMED_SECONDS (22*60*60) // 10pm
 
 
 
@@ -65,6 +71,39 @@ float calc_light_level(Time now,Time alarm_time)
     return (1-seconds_to_max/(float)START_LIGHT_WINDOW_SECONDS);
   }
   return 1-seconds_to_max/(float)END_LIGHT_WINDOW_SECONDS;
+
+}
+
+uint8_t calc_backlight_level(Time now)
+{
+  uint32_t seconds_now=now.total_seconds();
+  if (seconds_now<BACKLIGHT_DARK_UNTIL_SECONDS)
+  {
+    return BACKLIGHT_MINIMUM_BRIGHTNESS;
+  }
+  if (seconds_now<BACKLIGHT_MAX_BRIGHTNESS_SECONDS)
+  {
+    // Initial ramp up
+    uint32_t seconds_into_ramp=seconds_now-BACKLIGHT_DARK_UNTIL_SECONDS;
+    uint32_t ramp_duration=BACKLIGHT_MAX_BRIGHTNESS_SECONDS-BACKLIGHT_DARK_UNTIL_SECONDS;
+    float prop=seconds_into_ramp/(float)ramp_duration;
+    return BACKLIGHT_MINIMUM_BRIGHTNESS+(prop*(BACKLIGHT_MAXIMUM_BRIGHTNESS-BACKLIGHT_MINIMUM_BRIGHTNESS));
+  }
+  if (seconds_now<BACKLIGHT_START_DIMMING_SECONDS)
+  {
+    return BACKLIGHT_MAXIMUM_BRIGHTNESS;
+  }
+  if (seconds_now<BACKLIGHT_FULLY_DIMMED_SECONDS)
+  {
+    // Initial ramp down
+    uint32_t seconds_into_ramp=seconds_now-BACKLIGHT_START_DIMMING_SECONDS;
+    uint32_t ramp_duration=BACKLIGHT_FULLY_DIMMED_SECONDS-BACKLIGHT_START_DIMMING_SECONDS;
+    float prop=seconds_into_ramp/(float)ramp_duration;
+    return BACKLIGHT_MAXIMUM_BRIGHTNESS-(prop*(BACKLIGHT_MAXIMUM_BRIGHTNESS-BACKLIGHT_MINIMUM_BRIGHTNESS));
+  }
+  return BACKLIGHT_MINIMUM_BRIGHTNESS;
+
+  
 
 }
 
@@ -105,8 +144,7 @@ void setup(void)
 
     pinMode(PIN_POWER_ON, OUTPUT);
     digitalWrite(PIN_POWER_ON, HIGH);
-    ledcSetup(0, 2000, 8);
-    ledcAttachPin(PIN_LCD_BL, 0);
+
     // ledcWrite(0, 255); /* Screen brightness can be modified by adjusting this parameter. (0-255) */
 
     Serial.begin(115200);
@@ -156,7 +194,11 @@ void loop()
       Time alarm_time=alarm_setter.get_alarm_time();  
 
       float light_level=calc_light_level(now,alarm_time);
-      Serial.printf("Light level: %.02f\n",light_level);
+      uint8_t backlight_level=calc_backlight_level(now);
+      // If the main light is basically lit, then force the display level to maximum brightness regardless
+      if (light_level>0.2f) light_level=BACKLIGHT_MAXIMUM_BRIGHTNESS;
+      disp.setBrightness(backlight_level);
+      Serial.printf("Light level: %.02f, backlight level: %d\n",light_level, backlight_level);
       wake_light.set(light_level);
       for (uint8_t i=0;i<10;i++)
       {

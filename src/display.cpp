@@ -4,6 +4,8 @@
 #include "pin_config.h"
 #include "display.h"
 
+#define PWM_CHANNEL_LCD_BL 0
+
 Arduino_DataBus *bus = new Arduino_ESP32LCD8(PIN_LCD_DC /* DC */, \
                                             PIN_LCD_CS /* CS */, \
                                             PIN_LCD_WR /* WR */, \
@@ -43,7 +45,14 @@ void Display::begin()
                                         0 /* row offset 2 */);
             this->gfx->begin();
             this->gfx->setRotation(3); 
+            
+            ledcSetup(PWM_CHANNEL_LCD_BL, 2000, 8);
+            ledcAttachPin(PIN_LCD_BL, PWM_CHANNEL_LCD_BL);
+            this->setBrightness(100);
+
+
         }
+
 
 void Display::setBrightness(uint8_t bright)
         {
@@ -113,7 +122,7 @@ void Display::update_display()
 
 
             // Show the alarm time
-            this->gfx->setTextColor(RED);
+            this->gfx->setTextColor(CYAN);
             this->gfx->setCursor (160, 144);
             this->gfx->setFont(&FreeSans24pt7b);
             this->gfx->setTextSize(0);
