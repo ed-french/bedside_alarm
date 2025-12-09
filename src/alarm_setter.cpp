@@ -31,6 +31,7 @@ void AlarmSetter::_show_alarm_time(Time alarm_time)
     char alarm_buffer[20];
     alarm_time.HH_MM_str(alarm_buffer);
     _display->setAlarm(alarm_buffer);
+
 }
 
 void AlarmSetter::update()
@@ -49,6 +50,7 @@ void AlarmSetter::update()
         last_encoder_count=_encoder.getCount();
         last_twirl_ms=millis();
         _alarm_time.set_offset_seconds(_encoder.getCount()*SECONDS_PER_ENCODER_COUNT);
+        _display->update_display();
     }
     
     // Periodically we want to fetch the alarm time from the server

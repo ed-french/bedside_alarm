@@ -158,81 +158,15 @@ void loop()
       float light_level=calc_light_level(now,alarm_time);
       Serial.printf("Light level: %.02f\n",light_level);
       wake_light.set(light_level);
-      for (uint8_t i=0;i<5;i++)
+      for (uint8_t i=0;i<10;i++)
       {
         alarm_setter.update();
-        delay(200);
+        delay(50);
       }
       
       
     }
 
 
-
-    // int32_t newPosition = encoder.getCount();
-    
-    // if (newPosition!=0)
-    // {
-      // We have a change in the encoder
-      // Serial.println(newPosition);
-      // encoder.setCount(0);// reset the count, we'll take this one in..
-      // g_server_alarm_outofdate=true; // Mark that we need to update the server
-      // g_update_server_alarm_ms=millis()+2000; // We can wait a couple of seconds of quiet before sending to the server
-
-      // char old_alarm[10];
-      // disp.getAlarm(old_alarm);
-      // uint32_t alarm_mins=time_str_to_mins(old_alarm);
-
-      // Calculate the new alarm time based on the encoder move noted
-      // int16_t increment=minutes_per_encoder_step*newPosition;
-      // Serial.printf("\t\tIncrement: %d\n",increment);
-      // alarm_mins=alarm_mins+increment;
-
-
-      // char new_alarm[20];
-      // mins_to_time_str(new_alarm,alarm_mins); // convert the new time in mins to a char array
-      // disp.setAlarm(new_alarm);// Store the new time
-
-    // }
-    
-
-    // if (millis() > running) {
-    //     // Serial.print("Current running ");
-    //     // Serial.print(millis());
-    //     // Serial.println(" millis");
-    //     char time_buf[20];
-
-    //     disp.setTime(time_buf);
-    //     uint8_t brightness=16;
-    //     if (g_hours_at_sync>8 || g_hours_at_sync<21) brightness=255;
-        
-    //     disp.setBrightness(brightness);
-
-
-    //     disp.update_display();
-
-    //     running = millis() + 200;
-
-    //     if (g_server_alarm_outofdate && millis()>g_update_server_alarm_ms)
-    //     {
-    //       Serial.println("\nATTEMPING UPDATE THE SERVER RECORD OF THE ALARM TIME NOW....!");
-    //       char new_alarm[20];
-    //       disp.getAlarm(new_alarm);
-    //       bool success=set_server_alarm_time(new_alarm);
-    //       if (success)
-    //       {
-    //         g_server_alarm_outofdate=false; // Just send once
-    //         Serial.println("\t\tSUCCESSFUL!!!!!!!!!!!!");
-    //       } else {
-    //         Serial.println("Failed to update the server, will repeat");
-    //         g_update_server_alarm_ms=millis()+5000;// Try again in a bit
-    //       }
-
-
-
-          
-
-    //     }
-    // }
 
 }

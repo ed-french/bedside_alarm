@@ -31,5 +31,6 @@ class AlarmSetter {
         Time (* _alarm_time_fetcher_fn)(void);
         bool (* _alarm_time_setter_fn)(char * HH_MM_str);
         void _show_alarm_time(Time alarm_time);
+  
 
 };
