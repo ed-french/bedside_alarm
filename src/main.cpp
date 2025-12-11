@@ -3,7 +3,12 @@
 
 #include "live_time.h"
 #include "wifi_helper.h"
-#include "PWM_light.h"
+
+#if USE_EXTERNAL_LIGHT
+#include "remote_light.h"
+#else
+#include "pwm_light.h"
+#endif
 
 #include "alarm_setter.h"
 
@@ -61,7 +66,7 @@ float calc_light_level(Time now,Time alarm_time)
   uint32_t seconds_now=now.total_seconds();
   uint32_t alarms_seconds=alarm_time.total_seconds();
   int32_t seconds_to_max=alarms_seconds-seconds_now;
-  // Serial.printf("seconds_to_max: %d\n",seconds_to_max);
+  Serial.printf("seconds_to_max: %d\n",seconds_to_max);
   if (seconds_to_max>START_LIGHT_WINDOW_SECONDS)
   {
     Serial.println("Too early to alarm");
@@ -74,9 +79,10 @@ float calc_light_level(Time now,Time alarm_time)
   } 
   if (seconds_to_max>0)
   {
+    Serial.println("Early phase before alarm");
     return (1-seconds_to_max/(float)START_LIGHT_WINDOW_SECONDS);
   }
-  return 1-seconds_to_max/(float)END_LIGHT_WINDOW_SECONDS;
+  return 1+seconds_to_max/(float)END_LIGHT_WINDOW_SECONDS;
 
 }
 
@@ -134,7 +140,7 @@ void startup_countdown(uint8_t seconds)
 
 
 
-PWM_Light wake_light= PWM_Light(PIN_WAKE_LIGHT);
+Light wake_light= Light(PIN_WAKE_LIGHT);
 AlarmSetter alarm_setter=AlarmSetter();
 
 

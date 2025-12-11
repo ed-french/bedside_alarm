@@ -4,11 +4,11 @@
 #define BIT_WIDTH 13
 #define PWM_CHANNEL 3
 
-class PWM_Light
+class Light
 {
 
     public:
-        PWM_Light(int pin)
+        Light(int pin)
         {
             _pin = pin;
             _value = 128;
@@ -33,7 +33,7 @@ class PWM_Light
         void _set(float prop)
         {
             _value = prop;
-            uint16_t pwm_setting = prop_to_level(prop);
+            uint16_t pwm_setting = _prop_to_level(prop);
             // Serial.printf("For prop level of %.02f, setting PWM to %d\n",_value, pwm_setting);
             ledcWrite(PWM_CHANNEL, pwm_setting);
         }
@@ -86,7 +86,7 @@ class PWM_Light
            65535
         };
         
-        uint16_t prop_to_level(float prop)
+        uint16_t _prop_to_level(float prop)
         {
             // linearly interpolates between two values
             uint8_t level_count=sizeof(light_levels)/2; // say 25 levels (0-24)
