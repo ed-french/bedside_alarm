@@ -6,6 +6,7 @@
 
 #include "simple_time.h"
 #include "display.h"
+#include "alarm_state.h"
 
 #define ALARM_SETTER_UPDATE_INTERVAL_MS 60000 // periodically refresh from server
 
@@ -16,13 +17,14 @@ class AlarmSetter {
         AlarmSetter();
         void begin(Time (* alarm_time_fetcher_fn)(void), \
                      bool (* alarm_time_setter_fn)(char * HH_MM_str), \
-                     Display * display \
+                     Display * display, \
+                     AlarmState * alarm_state \
                     );
                      // Fetches the current alarm time and prepares for future changes
         void update(); // checks for updates, run several times per main loop
-        Time get_alarm_time(); // returns the current alarm time (refreshing if needed)
-        void get_alarm_time_str(char * buffer); // returns the current alarm time (refreshing if needed) but as a str
-        bool set_alarm_time(Time alarm_time);
+        // Time get_alarm_time(); // returns the current alarm time (refreshing if needed)
+        // void get_alarm_time_str(char * buffer); // returns the current alarm time (refreshing if needed) but as a str
+        // bool set_alarm_time(Time alarm_time);
     private:
         uint32_t _last_update_millis;
         Time _alarm_time;
@@ -31,6 +33,7 @@ class AlarmSetter {
         Time (* _alarm_time_fetcher_fn)(void);
         bool (* _alarm_time_setter_fn)(char * HH_MM_str);
         void _show_alarm_time(Time alarm_time);
+        AlarmState * _alarm_state;
   
 
 };

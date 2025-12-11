@@ -14,6 +14,10 @@
 
 #include "pin_config.h"
 
+#include "alarm_state.h"
+
+#include "simple_button.h"
+
 
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)
@@ -42,11 +46,13 @@
 
 
 
-
+AlarmState alarm_state=AlarmState();
 
 
 
 Display disp=Display();
+
+SimpleButton knob_press=SimpleButton(PIN_KNOB_BUTTON,LOW); // Active high button
 
 
 
@@ -55,7 +61,7 @@ float calc_light_level(Time now,Time alarm_time)
   uint32_t seconds_now=now.total_seconds();
   uint32_t alarms_seconds=alarm_time.total_seconds();
   int32_t seconds_to_max=alarms_seconds-seconds_now;
-  Serial.printf("seconds_to_max: %d\n",seconds_to_max);
+  // Serial.printf("seconds_to_max: %d\n",seconds_to_max);
   if (seconds_to_max>START_LIGHT_WINDOW_SECONDS)
   {
     Serial.println("Too early to alarm");
@@ -63,7 +69,7 @@ float calc_light_level(Time now,Time alarm_time)
   } 
   if (seconds_to_max<-END_LIGHT_WINDOW_SECONDS)
   {
-    Serial.println("Too late to alarm");
+    // Serial.println("Too late to alarm");
     return 0.0;
   } 
   if (seconds_to_max>0)
@@ -153,10 +159,12 @@ void setup(void)
 
     connect_wifi();
     setup_server();
-    get_alarm_time();
+    alarm_state.alarm_time=get_alarm_time();
     alarm_setter.begin(get_alarm_time, \
                        set_server_alarm_time,\
-                       &disp);
+                       &disp, \
+                       &alarm_state \
+                       );
 
 
 
@@ -173,6 +181,11 @@ void setup(void)
 void loop()
 {
     Serial.println("Startin loop");
+
+
+
+
+
     TimeSyncer syncer=TimeSyncer();
     syncer.begin(get_time_now,esp_restart);
     // char time_buffer[20];
@@ -185,24 +198,34 @@ void loop()
     while (true)
     {
       Time now=syncer.now();
-      Serial.printf("Last time fetched: %d\n",now.HHMMSSacd());
+      alarm_state.now=now;
+      Serial.printf("\n\nLast time fetched: %d\n",now.HHMMSSacd());
+      // Serial.printf("Button state: %d\n",knob_press.is_pressed());
+      knob_press.is_pressed();
+      Serial.printf(">>>>>>>>>>>>>>> Button toggling state: %d\n",knob_press.toggling_state);
       char time_buffer[20];
-      now.c_str(time_buffer);
-      disp.setTime(time_buffer);
-      disp.update_display();
+      // now.c_str(time_buffer);
+      // disp.setTime(time_buffer);
+      disp.update_display(&alarm_state);
       
-      Time alarm_time=alarm_setter.get_alarm_time();  
+      // Time alarm_time=alarm_setter.get_alarm_time(alarm_state); 
+      alarm_setter.update();
 
-      float light_level=calc_light_level(now,alarm_time);
+      float light_level=calc_light_level(now,alarm_state.alarm_time);
+      alarm_state.light_level=light_level;
       uint8_t backlight_level=calc_backlight_level(now);
+      alarm_state.backlight_brightness=backlight_level;
       // If the main light is basically lit, then force the display level to maximum brightness regardless
       if (light_level>0.2f) light_level=BACKLIGHT_MAXIMUM_BRIGHTNESS;
-      disp.setBrightness(backlight_level);
-      Serial.printf("Light level: %.02f, backlight level: %d\n",light_level, backlight_level);
-      wake_light.set(light_level);
+      alarm_state.backlight_brightness=backlight_level;
+      // disp.setBrightness(backlight_level);
+      // Serial.printf("Light level: %.02f, backlight level: %d\n",light_level, backlight_level);
+      wake_light.update(&alarm_state);
       for (uint8_t i=0;i<10;i++)
       {
         alarm_setter.update();
+        knob_press.is_pressed();
+        alarm_state.override_active=knob_press.toggling_state;
         delay(50);
       }
       

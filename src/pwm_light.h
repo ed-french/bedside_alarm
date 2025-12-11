@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "alarm_state.h"
 
 #define BIT_WIDTH 13
 #define PWM_CHANNEL 3
@@ -24,22 +25,50 @@ class PWM_Light
             
             ledcAttachPin(pin, PWM_CHANNEL);
 
-            set(this->_value);
+            _set(this->_value);
             Serial.printf("Frequency check for PWM: %d\n",ledcReadFreq(PWM_CHANNEL));          // actual freq
         }
 
-        void set(float prop)
+   
+        void _set(float prop)
         {
             _value = prop;
             uint16_t pwm_setting = prop_to_level(prop);
-            Serial.printf("For prop level of %.02f, setting PWM to %d\n",_value, pwm_setting);
+            // Serial.printf("For prop level of %.02f, setting PWM to %d\n",_value, pwm_setting);
             ledcWrite(PWM_CHANNEL, pwm_setting);
         }
-        void inc(void)
+        // void inc(void)
+        // {
+        //     _value+=0.01;
+        //     if (_value>1) _value=0.0; // wrap for now (only used for testing anyway?)
+        //     set(_value);
+        // }
+        void update(AlarmState *alarm_state)
         {
-            _value+=0.01;
-            if (_value>1) _value=0.0; // wrap for now (only used for testing anyway?)
-            set(_value);
+            float probable_light_level=alarm_state->light_level;
+            // Test if we should be overriding the light level
+
+            if (alarm_state->override_active)
+            { 
+                // // First check if we should timeout the override
+                // Time now=alarm_state->now;
+                // if (now.total_seconds()>=alarm_state->override_timeout.total_seconds())
+                // {
+                //     Serial.println("Override timeout reached, disabling override");
+                //     alarm_state->override_active=false;
+                //     _set(alarm_state->light_level);
+                //     return;
+                // }
+                // Figure out the over-ridden light level (the opporsite of the expected level)
+                // i.e. if the alarm light is off, then it should be overridden to nearly on
+
+                float actual_light_level=probable_light_level>0.01f ? 0.01f : 0.7f;
+                alarm_state->light_level=actual_light_level;
+                Serial.printf("Override active, setting light level to %.02f\n",actual_light_level);
+                _set(actual_light_level);
+                return;
+            }
+            _set(alarm_state->light_level);
         }
 
 

@@ -36,3 +36,5 @@
 
 #define PIN_QUAD_A                  11
 #define PIN_QUAD_B                  12
+
+#define PIN_KNOB_BUTTON            10

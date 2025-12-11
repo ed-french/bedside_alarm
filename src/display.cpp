@@ -27,10 +27,10 @@ Arduino_DataBus *bus = new Arduino_ESP32LCD8(PIN_LCD_DC /* DC */, \
 
 Display::Display()
         {
-            this->refresh_required=true;
-            strcpy(this->time_str,"--:--");
-            strcpy(this->alarm_str,"??:??");
-            this->brightness=50;
+            // this->refresh_required=true;
+            // strcpy(this->time_str,"--:--");
+            // strcpy(this->alarm_str,"??:??");
+            // this->brightness=50;
         }
 void Display::begin()
         {
@@ -48,66 +48,66 @@ void Display::begin()
             
             ledcSetup(PWM_CHANNEL_LCD_BL, 2000, 8);
             ledcAttachPin(PIN_LCD_BL, PWM_CHANNEL_LCD_BL);
-            this->setBrightness(100);
+            // this->setBrightness(100);
 
 
         }
 
 
-void Display::setBrightness(uint8_t bright)
-        {
-          //Serial.printf("About to compare brightnesses of : %d and %d\n",bright,this->brightness);
-            if(this->brightness!=bright)
-            {
-                //Serial.printf("Brightness updated to : %d\n",bright);
-                this->refresh_required=true;
-                this->brightness=bright;
-            } 
+// void Display::_setBrightness(uint8_t bright)
+//         {
+//           //Serial.printf("About to compare brightnesses of : %d and %d\n",bright,this->brightness);
+//             if(this->brightness!=bright)
+//             {
+//                 //Serial.printf("Brightness updated to : %d\n",bright);
+//                 this->refresh_required=true;
+//                 this->brightness=bright;
+//             } 
 
             
-        }
+//         }
 
-void Display::setTime(char * time_str)
-        {
-            //Serial.printf("About to compare times as strings: %s to %s\n",time_str,this->time_str);
-            if (strncmp(time_str,this->time_str,5))
-            {
-                //Serial.printf("Time has changed to : %s !\n",time_str);
-                strncpy(this->time_str,time_str,5);
-                this->refresh_required=true;
-            }
+// void Display::setTime(char * time_str)
+//         {
+//             //Serial.printf("About to compare times as strings: %s to %s\n",time_str,this->time_str);
+//             if (strncmp(time_str,this->time_str,5))
+//             {
+//                 //Serial.printf("Time has changed to : %s !\n",time_str);
+//                 strncpy(this->time_str,time_str,5);
+//                 this->refresh_required=true;
+//             }
             
 
-        }
+//         }
 
-void Display::getAlarm(char * alarm_str)
-        {
-          strncpy(alarm_str,this->alarm_str,5);
+// void Display::_getAlarm(char * alarm_str)
+//         {
+//           strncpy(alarm_str,this->alarm_str,5);
 
-        }
+//         }
 
-void Display::setAlarm(char * alarm_str)
-        {
-            if (strncmp(alarm_str,this->alarm_str,5))
-            {
-                Serial.printf("Alarm has changed to : %s!\n", alarm_str);
-                strncpy(this->alarm_str,alarm_str,5);
-                this->refresh_required=true;
-            }
+// void Display::_setAlarm(char * alarm_str)
+//         {
+//             if (strncmp(alarm_str,this->alarm_str,5))
+//             {
+//                 Serial.printf("Alarm has changed to : %s!\n", alarm_str);
+//                 strncpy(this->alarm_str,alarm_str,5);
+//                 this->refresh_required=true;
+//             }
 
 
             
-        }
+//         }
 
-void Display::update_display()
+void Display::update_display(AlarmState *alarm_state = nullptr)
         {
             // Do nothing if a refresh isn't needed
-            if (!this->refresh_required)
+            if (!alarm_state->display_needs_update)
             {
                 Serial.println("No need to update display");
                 return;
             } 
-            ledcWrite(0, this->brightness);
+            ledcWrite(0, alarm_state->backlight_brightness);
 
             this->gfx->fillScreen(BLACK);
 
@@ -117,8 +117,9 @@ void Display::update_display()
             this->gfx->setCursor (48, 100);
             this->gfx->setFont(&FreeSans24pt7b);
             this->gfx->setTextSize(2); 
-
-            this->gfx->print(this->time_str);
+            char now_str[20];
+            alarm_state->now.HH_MM_str(now_str);
+            this->gfx->print(now_str);
 
 
             // Show the alarm time
@@ -127,10 +128,18 @@ void Display::update_display()
             this->gfx->setFont(&FreeSans24pt7b);
             this->gfx->setTextSize(0);
 
-            this->gfx->print(this->alarm_str);
-            Serial.println("Display updated");
+            char alarm_str[20];
+            alarm_state->alarm_time.HH_MM_str(alarm_str);
+            this->gfx->print(alarm_str);
 
-            this->refresh_required=false;
+            uint8_t height_of_brightness_bar= (uint8_t)(alarm_state->light_level*170.0f);
+            // Serial.printf("Height of brightness bar is : %d\n",height_of_brightness_bar);
+            this->gfx->fillRect(0, 170-height_of_brightness_bar , 20, height_of_brightness_bar, YELLOW);
+
+
+            // Serial.println("Display updated");
+
+            alarm_state->display_needs_update = false;
         }
 
         
