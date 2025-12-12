@@ -10,6 +10,7 @@
 #include "wifi_config.h"
 
 #include "simple_time.h"
+#include "remote_light.h"
 
 // #define ELEGANTOTA_USE_ASYNC_WEBSERVER 1
 
@@ -97,6 +98,19 @@ void connect_wifi()
   Serial.println(ssid);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
+  #ifdef USE_EXTERNAL_LIGHT
+
+      xTaskCreate(
+        httpTask,     // function
+        "httpTask",   // name
+        4096,         // stack
+        NULL,         // params
+        1,            // priority
+        NULL          // handle
+    );
+
+  #endif
 
 }
 

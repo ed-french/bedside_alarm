@@ -12,7 +12,8 @@ class Light
         void begin(float starting_level);
         void set(float prop);
         void update(AlarmState *alarm_state);
+        
 };
-
+void httpTask(void* pvParameters);
 
 #endif

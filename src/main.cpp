@@ -227,7 +227,7 @@ void loop()
       // disp.setBrightness(backlight_level);
       // Serial.printf("Light level: %.02f, backlight level: %d\n",light_level, backlight_level);
       wake_light.update(&alarm_state);
-      for (uint8_t i=0;i<10;i++)
+      for (uint8_t i=0;i<40;i++)
       {
         alarm_setter.update();
         knob_press.is_pressed();
