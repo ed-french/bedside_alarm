@@ -13,4 +13,4 @@ const char * get_alarm_time_url=BASE_URL "getalarmtime/" USER_NAME;
 
 const char * set_alarm_url=BASE_URL "setalarmtime/" USER_NAME "/";
 
-const char * hostname="EdBedside";                                                                  
+const char * hostname=USER_NAME "Bedside";                                                                  

@@ -66,23 +66,40 @@ float calc_light_level(Time now,Time alarm_time)
   uint32_t seconds_now=now.total_seconds();
   uint32_t alarms_seconds=alarm_time.total_seconds();
   int32_t seconds_to_max=alarms_seconds-seconds_now;
+  int32_t seconds_after_max=-seconds_to_max;
   Serial.printf("seconds_to_max: %d\n",seconds_to_max);
-  if (seconds_to_max>START_LIGHT_WINDOW_SECONDS)
+
+  // Calculate laboriously which state we are in for better readability
+  bool is_before_alarm=(seconds_to_max>START_LIGHT_WINDOW_SECONDS);
+  bool is_after_alarm=(seconds_after_max>END_LIGHT_WINDOW_SECONDS);
+  bool is_alarming_before_max=(seconds_to_max<=START_LIGHT_WINDOW_SECONDS) && (seconds_to_max>0);
+  bool is_alarming_after_max=(seconds_after_max<=END_LIGHT_WINDOW_SECONDS) && (seconds_after_max>=0);
+  
+
+  // 
+
+  if (is_before_alarm )
   {
     Serial.println("Too early to alarm");
     return 0.0; // Long while to alarm
   } 
-  if (seconds_to_max<-END_LIGHT_WINDOW_SECONDS)
+  if (is_after_alarm)
   {
-    // Serial.println("Too late to alarm");
+    Serial.println("Too late to alarm");
     return 0.0;
   } 
-  if (seconds_to_max>0)
+  if (is_alarming_before_max)
   {
     Serial.println("Early phase before alarm");
-    return (1-seconds_to_max/(float)START_LIGHT_WINDOW_SECONDS);
+    return 1-(seconds_to_max/(float)START_LIGHT_WINDOW_SECONDS);
   }
-  return 1+seconds_to_max/(float)END_LIGHT_WINDOW_SECONDS;
+  if (is_alarming_after_max)
+  {
+    Serial.println("Late phase after alarm");
+    return 1-seconds_after_max/(float)END_LIGHT_WINDOW_SECONDS;
+  }
+  Serial.println("FAILED TO IDENTIFY ALARM LIGHT STATE!!!!!!!!!!!!!!!!!!!");
+  return 0.0; // Failsafe
 
 }
 
